@@ -4,14 +4,12 @@ import java.net.UnknownHostException;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.data.mongodb.builder.BasicQuery;
-import org.springframework.data.mongodb.builder.QueryBuilder;
 import org.springframework.data.mongodb.builder.SortSpecification.SortOrder;
 
 import com.mongodb.DB;
+import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
-import com.mongodb.util.JSON;
 
 public class QueryBuilderTest {
 
@@ -56,7 +54,7 @@ public class QueryBuilderTest {
 	public void m1() throws UnknownHostException, MongoException {
 		Mongo mongo = new Mongo();
 		DB db = mongo.getDB("test");
-		System.out.println(db.getCollectionNames());
+		DBCollection col = db.getCollection("myFiles");		
 	}
 	
 }
