@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2010-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,34 +20,36 @@ import java.util.LinkedHashMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-public class QueryBuilder implements Query {
+public class QuerySpec implements Query {
 	
-	private LinkedHashMap<String, CriteriaSpec> criteria = new LinkedHashMap<String, CriteriaSpec>();
+	private LinkedHashMap<String, Criteria> criteria = new LinkedHashMap<String, Criteria>();
+	
+	private FieldSpec fieldSpec;
+	
+	private int limit;
 
-	public Criteria find(String key) {
-		Criteria c = new Criteria(this);
+	public CriteriaSpec find(String key) {
+		CriteriaSpec c = new CriteriaSpec(this);
 		this.criteria.put(key, c);
 		return c;
 	}
 
-	public QueryBuilder or(Query... queries) {
-		this.criteria.put("$or", new OrCriteria(queries));
+	public QuerySpec or(Query... queries) {
+		this.criteria.put("$or", new OrCriteriaSpec(queries));
 		return this;
 	}
 
-	public FieldSpecification fields() {
-		return new FieldSpecification();
+	public FieldSpec fields() {
+		synchronized (this) {
+			if (fieldSpec == null) {
+				this.fieldSpec = new FieldSpec();
+			}
+		}
+		return this.fieldSpec;
 	}
 	
-	public SliceSpecification slice() {
-		return new SliceSpecification();
-	}
-	
-	public SortSpecification sort() {
-		return new SortSpecification();
-	}
-	
-	public QueryBuilder limit(int limit) {
+	public QuerySpec limit(int limit) {
+		this.limit = limit;
 		return this;
 	}
 	
@@ -55,14 +57,28 @@ public class QueryBuilder implements Query {
 		return this;
 	}
 
+	@Override
 	public DBObject getQueryObject() {
 		DBObject dbo = new BasicDBObject();
 		for (String k : criteria.keySet()) {
-			CriteriaSpec c = criteria.get(k);
+			Criteria c = criteria.get(k);
 			DBObject cl = c.getCriteriaObject(k);
 			dbo.putAll(cl);
 		}
 		return dbo;
+	}
+
+	@Override
+	public DBObject getFieldsObject() {
+		if (this.fieldSpec == null) {
+			return null;
+		}
+		return fieldSpec.getFieldsObject();
+	}
+
+	@Override
+	public int getLimit() {
+		return this.limit;
 	}
 
 }

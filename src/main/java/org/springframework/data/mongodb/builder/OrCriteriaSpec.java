@@ -15,14 +15,32 @@
  */
 package org.springframework.data.mongodb.builder;
 
+import org.bson.types.BasicBSONList;
+
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-
-public interface Query {
+public class OrCriteriaSpec implements Criteria {
 	
-	DBObject getQueryObject();
-
-	DBObject getFieldsObject();
+	Query[] queries = null;
 	
-	int getLimit();
+	public OrCriteriaSpec(Query[] queries) {
+		super();
+		this.queries = queries;
+	}
+
+
+	/* (non-Javadoc)
+	 * @see org.springframework.datastore.document.mongodb.query.Criteria#getCriteriaObject(java.lang.String)
+	 */
+	public DBObject getCriteriaObject(String key) {
+		DBObject dbo = new BasicDBObject();
+		BasicBSONList l = new BasicBSONList();
+		for (Query q : queries) {
+			l.add(q.getQueryObject());
+		}
+		dbo.put(key, l);
+		return dbo;
+	}
+
 }
